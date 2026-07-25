@@ -2,9 +2,6 @@ return {
   "neovim/nvim-lspconfig",
 
   cmd = { "LspStart", "LspStop", "LspRestart", "LspLog" },
-  -- Must fire *before* FileType: vim.lsp.enable() works by installing a
-  -- FileType autocmd, so loading on BufEnter (which fires after) misses the
-  -- first file opened and nothing attaches until you re-edit it.
   event = { "BufReadPre", "BufNewFile" },
 
   dependencies = {
@@ -113,9 +110,38 @@ return {
     -- #####
 
     vim.lsp.enable("html")
-    -- vim.lsp.enable("clangd")
-
     vim.lsp.enable("bashls")
+
+    -- ##### Vue (hybrid mode) #####
+    -- vue_ls handles the .vue template/SFC layer; the actual TypeScript comes
+    -- from vtsls with @vue/typescript-plugin loaded. Both must run together.
+    local vue_language_server_path = vim.fn.expand("$MASON/packages/vue-language-server/node_modules/@vue/language-server")
+
+    vim.lsp.config("vtsls", {
+      settings = {
+        vtsls = {
+          tsserver = {
+            globalPlugins = {
+              {
+                name = "@vue/typescript-plugin",
+                location = vue_language_server_path,
+                languages = { "vue" },
+                configNamespace = "typescript",
+              },
+            },
+          },
+        },
+      },
+      filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
+    })
+    vim.lsp.enable("vtsls")
+
+    vim.lsp.enable("vue_ls")
+    -- #####
+
+    -- ESLint diagnostics + code actions (formatting stays with prettier via
+    -- conform). Attaches only in projects with an eslint config on disk.
+    vim.lsp.enable("eslint")
 
     vim.lsp.config("rust_analyzer", {
       settings = {
@@ -124,24 +150,17 @@ return {
           check = {
             command = "clippy",
             workspace = true,
-            -- features = "all",
+            features = "all",
           },
         },
       },
     })
     vim.lsp.enable("rust_analyzer")
 
-    vim.lsp.config("jdtls", {})
-    vim.lsp.enable("jdtls")
-
     require("lspconfig.ui.windows").default_options.border = "single"
 
-    -- Install the servers enabled above. `automatic_enable = false` keeps the
-    -- vim.lsp.enable() calls in this file the single source of truth for which
-    -- servers actually run. rust_analyzer is omitted on purpose: it comes from
-    -- rustup so it stays in lockstep with the toolchain.
     require("mason-lspconfig").setup({
-      ensure_installed = { "lua_ls", "ruff", "html", "bashls", "jdtls" },
+      ensure_installed = { "lua_ls", "ruff", "html", "bashls", "rust-analyzer", "vtsls", "vue_ls", "eslint" },
       automatic_enable = false,
     })
 
