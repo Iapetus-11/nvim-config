@@ -112,14 +112,45 @@ return {
     vim.lsp.enable("html")
     vim.lsp.enable("bashls")
 
-    -- ##### Vue (hybrid mode) #####
+    -- ##### Vue (hybrid mode) + TypeScript/JavaScript #####
     -- vue_ls handles the .vue template/SFC layer; the actual TypeScript comes
     -- from vtsls with @vue/typescript-plugin loaded. Both must run together.
     local vue_language_server_path = vim.fn.expand("$MASON/packages/vue-language-server/node_modules/@vue/language-server")
 
+    -- Shared TS/JS settings (auto-import behaviour + inlay hints). One table
+    -- reused for both languages so they stay in lockstep.
+    local ts_language_settings = {
+      updateImportsOnFileMove = { enabled = "always" },
+      suggest = { completeFunctionCalls = true },
+      inlayHints = {
+        enumMemberValues = { enabled = true },
+        functionLikeReturnTypes = { enabled = true },
+        parameterNames = { enabled = "literals" },
+        parameterTypes = { enabled = true },
+        propertyDeclarationTypes = { enabled = true },
+        variableTypes = { enabled = false },
+      },
+    }
+
     vim.lsp.config("vtsls", {
+      filetypes = {
+        "javascript",
+        "javascriptreact",
+        "javascript.jsx",
+        "typescript",
+        "typescriptreact",
+        "typescript.tsx",
+        "vue",
+      },
       settings = {
+        complete_function_calls = true,
         vtsls = {
+          enableMoveToFileCodeAction = true,
+          autoUseWorkspaceTsdk = true,
+          experimental = {
+            maxInlayHintLength = 30,
+            completion = { enableServerSideFuzzyMatch = true },
+          },
           tsserver = {
             globalPlugins = {
               {
@@ -127,20 +158,62 @@ return {
                 location = vue_language_server_path,
                 languages = { "vue" },
                 configNamespace = "typescript",
+                enableForWorkspaceTypeScriptVersions = true,
               },
             },
           },
         },
+        typescript = ts_language_settings,
+        javascript = ts_language_settings,
       },
-      filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
     })
     vim.lsp.enable("vtsls")
 
     vim.lsp.enable("vue_ls")
+
+    -- vtsls code actions + inlay hints, bound buffer-local when it attaches.
+    local function ts_code_action(kind)
+      return function()
+        vim.lsp.buf.code_action({
+          apply = true,
+          context = { only = { kind }, diagnostics = {} },
+        })
+      end
+    end
+
+    vim.api.nvim_create_autocmd("LspAttach", {
+      group = vim.api.nvim_create_augroup("vtsls_extras", { clear = true }),
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if not client or client.name ~= "vtsls" then
+          return
+        end
+        local map = require("utils").map
+        map("n", "<leader>co", ts_code_action("source.organizeImports"), { buffer = args.buf, desc = "Organize imports" })
+        map("n", "<leader>cM", ts_code_action("source.addMissingImports.ts"), { buffer = args.buf, desc = "Add missing imports" })
+        map("n", "<leader>cu", ts_code_action("source.removeUnused.ts"), { buffer = args.buf, desc = "Remove unused" })
+        map("n", "<leader>cD", ts_code_action("source.fixAll.ts"), { buffer = args.buf, desc = "Fix all diagnostics" })
+        if client:supports_method("textDocument/inlayHint") then
+          vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+        end
+      end,
+    })
+
+    -- Toggle inlay hints for the current buffer (they're on by default in TS).
+    require("utils").map("n", "<leader>uh", function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+    end, { desc = "Toggle inlay hints" })
     -- #####
 
     -- ESLint diagnostics + code actions (formatting stays with prettier via
-    -- conform). Attaches only in projects with an eslint config on disk.
+    -- conform). Attaches only in projects with an eslint config on disk;
+    -- workingDirectories=auto lets it find that config in monorepo subdirs.
+    vim.lsp.config("eslint", {
+      settings = {
+        workingDirectories = { mode = "auto" },
+      },
+    })
     vim.lsp.enable("eslint")
 
     vim.lsp.config("rust_analyzer", {
