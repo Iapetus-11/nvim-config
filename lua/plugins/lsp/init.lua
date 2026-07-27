@@ -1,3 +1,22 @@
+local utils = require("utils")
+
+local function show_line_diagnostic()
+  vim.diagnostic.config({
+    float = {
+      show_header = true,
+      source = "if_many",
+      border = "rounded",
+      focusable = false,
+    },
+  })
+  vim.diagnostic.open_float()
+end
+
+local function toggle_inlay_hints()
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+end
+
 return {
   "neovim/nvim-lspconfig",
 
@@ -10,50 +29,30 @@ return {
   },
 
   keys = {
-    {
-      "<Leader>?",
-      function()
-        vim.diagnostic.config({
-          float = {
-            show_header = true,
-            source = "if_many",
-            border = "rounded",
-            focusable = false,
-          },
-        })
-        vim.diagnostic.open_float()
-      end,
-      desc = "Show line diagnostic",
-    },
+    { "<Leader>?", show_line_diagnostic, desc = "Show line diagnostic" },
   },
 
   config = function()
     require("neoconf").setup()
 
-    -- Define the virtual text diagnostic signs
-    local signs = {
-      Error = "",
-      Warn = "",
-      Hint = "󰌵",
-      Info = "",
-    }
+    require("plugins.lsp.keymaps")
 
     vim.diagnostic.config({
-      virtual_text = {
-        prefix = function(diagnostic)
-          if diagnostic.severity == vim.diagnostic.severity.ERROR then
-            return signs["Error"]
-          elseif diagnostic.severity == vim.diagnostic.severity.WARN then
-            return signs["Warn"]
-          elseif diagnostic.severity == vim.diagnostic.severity.INFO then
-            return signs["Hint"]
-          else
-            return signs["Info"]
-          end
-        end,
-      },
+      virtual_text = false,
+      virtual_lines = { current_line = true },
+      signs = { text = utils.diagnostic_icons },
     })
-    -----------
+
+    local servers = {
+      "lua_ls",
+      "ruff",
+      "html",
+      "bashls",
+      "vtsls",
+      "vue_ls",
+      "eslint",
+      "rust_analyzer",
+    }
 
     vim.lsp.config("lua_ls", {
       settings = {
@@ -82,22 +81,13 @@ return {
           },
           workspace = {
             checkThirdParty = false,
-            -- Keep project files diagnostic-enabled while loading external API types.
-            library = {
-              vim.env.VIMRUNTIME,
-              vim.fn.stdpath("data") .. "/lazy/luvit-meta/library",
-              vim.fn.stdpath("data") .. "/lazy/snacks.nvim/lua",
-            },
+            library = { vim.env.VIMRUNTIME },
           },
         },
       },
     })
-    vim.lsp.enable("lua_ls")
 
     -- ##### Python #####
-    vim.lsp.config("ruff", {})
-    vim.lsp.enable("ruff")
-
     -- Old pyright configuration
     -- vim.lsp.config("pyright", {
     --   settings = {
@@ -108,9 +98,6 @@ return {
     -- })
     -- vim.lsp.enable("pyright")
     -- #####
-
-    vim.lsp.enable("html")
-    vim.lsp.enable("bashls")
 
     -- ##### Vue (hybrid mode) + TypeScript/JavaScript #####
     -- vue_ls handles the .vue template/SFC layer; the actual TypeScript comes
@@ -167,9 +154,6 @@ return {
         javascript = ts_language_settings,
       },
     })
-    vim.lsp.enable("vtsls")
-
-    vim.lsp.enable("vue_ls")
 
     -- vtsls code actions + inlay hints, bound buffer-local when it attaches.
     local function ts_code_action(kind)
@@ -188,7 +172,7 @@ return {
         if not client or client.name ~= "vtsls" then
           return
         end
-        local map = require("utils").map
+        local map = utils.map
         map("n", "<leader>co", ts_code_action("source.organizeImports"), { buffer = args.buf, desc = "Organize imports" })
         map("n", "<leader>cM", ts_code_action("source.addMissingImports.ts"), { buffer = args.buf, desc = "Add missing imports" })
         map("n", "<leader>cu", ts_code_action("source.removeUnused.ts"), { buffer = args.buf, desc = "Remove unused" })
@@ -200,10 +184,7 @@ return {
     })
 
     -- Toggle inlay hints for the current buffer (they're on by default in TS).
-    require("utils").map("n", "<leader>uh", function()
-      local bufnr = vim.api.nvim_get_current_buf()
-      vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
-    end, { desc = "Toggle inlay hints" })
+    utils.map("n", "<leader>uh", toggle_inlay_hints, { desc = "Toggle inlay hints" })
     -- #####
 
     -- ESLint diagnostics + code actions (formatting stays with prettier via
@@ -214,7 +195,6 @@ return {
         workingDirectories = { mode = "auto" },
       },
     })
-    vim.lsp.enable("eslint")
 
     vim.lsp.config("rust_analyzer", {
       settings = {
@@ -222,22 +202,21 @@ return {
           checkOnSave = true,
           check = {
             command = "clippy",
+            extraArgs = { "--", "-A", "unused" },
             workspace = true,
             features = "all",
           },
         },
       },
     })
-    vim.lsp.enable("rust_analyzer")
+
+    vim.lsp.enable(servers)
 
     require("lspconfig.ui.windows").default_options.border = "single"
 
     require("mason-lspconfig").setup({
-      ensure_installed = { "lua_ls", "ruff", "html", "bashls", "rust-analyzer", "vtsls", "vue_ls", "eslint" },
+      ensure_installed = servers,
       automatic_enable = false,
     })
-
-    -- Bootstrap lsp keymappings
-    require("plugins.lsp.keymaps")
   end,
 }
