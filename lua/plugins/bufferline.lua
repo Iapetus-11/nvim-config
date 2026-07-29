@@ -12,14 +12,13 @@ local function diagnostics_indicator(_, _, counts)
   for _, level in ipairs(diagnostic_order) do
     local count = counts[level.key]
     if count then
-      table.insert(parts, utils.diagnostic_icons[level.severity] .. " " .. count)
+      table.insert(parts, utils.diagnostic_symbol(level.severity) .. count)
     end
   end
   return table.concat(parts, " ")
 end
 
--- Close the current buffer while keeping the window on a real file: move to the
--- next bufferline tab first, then delete what we left behind.
+-- Close the current buffer while keeping the window on a real file
 local function close_buffer()
   local target = vim.api.nvim_get_current_buf()
 
@@ -54,21 +53,27 @@ return {
     { "<leader>bx", close_buffer, desc = "Close buffer" },
   },
 
-  opts = {
-    options = {
-      diagnostics = "nvim_lsp",
-      diagnostics_indicator = diagnostics_indicator,
-      always_show_bufferline = true,
-      show_buffer_close_icons = false,
-      -- Keep the tabline from spanning over the neo-tree sidebar.
-      offsets = {
-        {
-          filetype = "neo-tree",
-          text = "Files",
-          highlight = "Directory",
-          separator = true,
+  -- A function, because the catppuccin palette only exists after catppuccin sets up.
+  opts = function()
+    return {
+      options = {
+        diagnostics = "nvim_lsp",
+        diagnostics_indicator = diagnostics_indicator,
+        always_show_bufferline = true,
+        show_buffer_close_icons = false,
+        -- Keep the tabline from spanning over the neo-tree sidebar.
+        offsets = {
+          {
+            filetype = "neo-tree",
+            text = "Files",
+            highlight = "Directory",
+            separator = true,
+          },
         },
       },
-    },
-  },
+
+      -- Passed as a function so bufferline re-reads it on a colorscheme change.
+      highlights = require("catppuccin.special.bufferline").get_theme(),
+    }
+  end,
 }
