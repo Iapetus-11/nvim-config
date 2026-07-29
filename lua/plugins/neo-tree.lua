@@ -16,8 +16,8 @@ return {
   lazy = false,
 
   keys = {
-    { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "Toggle file explorer" },
-    { "<leader>E", "<cmd>Neotree reveal<cr>", desc = "Reveal current file in explorer" },
+    { "<leader>E", "<cmd>Neotree toggle<cr>", desc = "Toggle file explorer" },
+    { "<leader>e", "<cmd>Neotree reveal<cr>", desc = "Reveal current file in explorer" },
   },
 
   ---@module 'neo-tree'
