@@ -3,6 +3,7 @@ local utils = require("utils")
 local SERVERS = {
   "lua_ls",
   "ruff",
+  "pyright",
   "html",
   "bashls",
   "vtsls",
@@ -100,15 +101,12 @@ return {
     })
 
     -- ##### Python #####
-    -- Old pyright configuration
-    -- vim.lsp.config("pyright", {
-    --   settings = {
-    --     pyright = {
-    --       venv = ".venv",
-    --     },
-    --   },
-    -- })
-    -- vim.lsp.enable("pyright")
+    -- pyright provides the types and completion; ruff lints and formats.
+    -- pyright resolves imports from the interpreter it is given and never looks
+    -- for a virtual environment itself, so the path must be found here.
+    vim.lsp.config("pyright", {
+      on_init = require("plugins.lsp.python").on_init,
+    })
     -- #####
 
     -- ##### Vue (hybrid mode) + TypeScript/JavaScript #####
