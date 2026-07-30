@@ -53,6 +53,7 @@ return {
   opts = {
     filesystem = {
       filtered_items = SHOW_ALL_FILES,
+      use_libuv_file_watcher = true,
     },
   },
 }
