@@ -1,5 +1,30 @@
 local utils = require("utils")
 
+local SERVERS = {
+  "lua_ls",
+  "ruff",
+  "html",
+  "bashls",
+  "vtsls",
+  "vue_ls",
+  "eslint",
+  "rust_analyzer",
+}
+
+-- Shared TS/JS settings
+local TS_LANGUAGE_SETTINGS = {
+  updateImportsOnFileMove = { enabled = "always" },
+  suggest = { completeFunctionCalls = true },
+  inlayHints = {
+    enumMemberValues = { enabled = true },
+    functionLikeReturnTypes = { enabled = true },
+    parameterNames = { enabled = "literals" },
+    parameterTypes = { enabled = true },
+    propertyDeclarationTypes = { enabled = true },
+    variableTypes = { enabled = false },
+  },
+}
+
 local function show_line_diagnostic()
   vim.diagnostic.config({
     float = {
@@ -43,17 +68,8 @@ return {
       signs = { text = utils.diagnostic_icons },
     })
 
-    local servers = {
-      "lua_ls",
-      "ruff",
-      "html",
-      "bashls",
-      "vtsls",
-      "vue_ls",
-      "eslint",
-      "rust_analyzer",
-    }
-
+    -- lazydev owns runtime.version, workspace.library and checkThirdParty; it
+    -- applies them per project instead of to every Lua workspace.
     vim.lsp.config("lua_ls", {
       settings = {
         Lua = {
@@ -79,10 +95,6 @@ return {
             workspaceDelay = 200,
             workspaceRate = 100,
           },
-          workspace = {
-            checkThirdParty = false,
-            library = { vim.env.VIMRUNTIME },
-          },
         },
       },
     })
@@ -102,22 +114,9 @@ return {
     -- ##### Vue (hybrid mode) + TypeScript/JavaScript #####
     -- vue_ls handles the .vue template/SFC layer; the actual TypeScript comes
     -- from vtsls with @vue/typescript-plugin loaded. Both must run together.
+    -- Stays inside `config`: mason only exports $MASON once it loads, which is
+    -- after every plugin spec has been read.
     local vue_language_server_path = vim.fn.expand("$MASON/packages/vue-language-server/node_modules/@vue/language-server")
-
-    -- Shared TS/JS settings (auto-import behaviour + inlay hints). One table
-    -- reused for both languages so they stay in lockstep.
-    local ts_language_settings = {
-      updateImportsOnFileMove = { enabled = "always" },
-      suggest = { completeFunctionCalls = true },
-      inlayHints = {
-        enumMemberValues = { enabled = true },
-        functionLikeReturnTypes = { enabled = true },
-        parameterNames = { enabled = "literals" },
-        parameterTypes = { enabled = true },
-        propertyDeclarationTypes = { enabled = true },
-        variableTypes = { enabled = false },
-      },
-    }
 
     vim.lsp.config("vtsls", {
       filetypes = {
@@ -150,8 +149,8 @@ return {
             },
           },
         },
-        typescript = ts_language_settings,
-        javascript = ts_language_settings,
+        typescript = TS_LANGUAGE_SETTINGS,
+        javascript = TS_LANGUAGE_SETTINGS,
       },
     })
 
@@ -210,12 +209,12 @@ return {
       },
     })
 
-    vim.lsp.enable(servers)
+    vim.lsp.enable(SERVERS)
 
     require("lspconfig.ui.windows").default_options.border = "single"
 
     require("mason-lspconfig").setup({
-      ensure_installed = servers,
+      ensure_installed = SERVERS,
       automatic_enable = false,
     })
   end,

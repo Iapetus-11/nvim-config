@@ -1,5 +1,33 @@
 local UNFOLDED = 99
 
+local PARSERS = {
+  "lua",
+  "luadoc",
+  "vim",
+  "vimdoc",
+  "query",
+  "python",
+  "rust",
+  "typescript",
+  "javascript",
+  "tsx",
+  "vue",
+  "bash",
+  "html",
+  "css",
+  "scss",
+  "json",
+  "yaml",
+  "toml",
+  "markdown",
+  "markdown_inline",
+  "diff",
+  "gitcommit",
+  "git_config",
+  "gitignore",
+  "regex",
+}
+
 local function install_missing_parsers(wanted)
   local nvim_treesitter = require("nvim-treesitter")
   local installed = nvim_treesitter.get_installed()
@@ -33,33 +61,7 @@ return {
   end,
 
   config = function()
-    install_missing_parsers({
-      "lua",
-      "luadoc",
-      "vim",
-      "vimdoc",
-      "query",
-      "python",
-      "rust",
-      "typescript",
-      "javascript",
-      "tsx",
-      "vue",
-      "bash",
-      "html",
-      "css",
-      "scss",
-      "json",
-      "yaml",
-      "toml",
-      "markdown",
-      "markdown_inline",
-      "diff",
-      "gitcommit",
-      "git_config",
-      "gitignore",
-      "regex",
-    })
+    install_missing_parsers(PARSERS)
 
     vim.treesitter.language.register("json", "jsonc")
 

@@ -6,6 +6,31 @@ local severity = vim.diagnostic.severity
 local HALF_CIRCLE_LEFT = ""
 local HALF_CIRCLE_RIGHT = ""
 
+local WHOLE_PATH_PARTS = 3
+local MAX_BRANCH_CHARS = 32
+local MAX_MODE_CHARS = 3
+
+-- stylua: ignore
+local MODE_ABBREVIATIONS = {
+  NORMAL      = "NOR",
+  INSERT      = "INS",
+  VISUAL      = "VIS",
+  ["V-LINE"]  = "V-L",
+  ["V-BLOCK"] = "V-B",
+  SELECT      = "SEL",
+  ["S-LINE"]  = "S-L",
+  ["S-BLOCK"] = "S-B",
+  REPLACE     = "REP",
+  ["V-REPLACE"] = "V-R",
+  COMMAND     = "CMD",
+  EX          = "EX",
+  ["O-PENDING"] = "PND",
+  MORE        = "MOR",
+  CONFIRM     = "CNF",
+  SHELL       = "SHL",
+  TERMINAL    = "TRM",
+}
+
 local function foreground_color_of(highlight_group)
   local highlight = vim.api.nvim_get_hl(0, { name = highlight_group, link = false })
   if not highlight.fg then
@@ -29,8 +54,6 @@ local cursor_scope = {
   end,
 }
 
-local WHOLE_PATH_PARTS = 3
-
 -- Keep the parts that identify the file readable and clip the rest to an initial,
 -- so the depth of the path survives at almost no width cost. Trailing state
 -- symbols ride along on the last part.
@@ -51,11 +74,23 @@ end
 local file_name = {
   "filename",
   path = 1, -- relative to cwd
-  shorting_target = 0, -- lualine would otherwise clip directories to one letter
+  shorting_target = 0, -- otherwise, it'd clip directories to one letter
   fmt = shorten_path,
 }
 
-local MAX_BRANCH_CHARS = 32
+-- lualine falls back to the raw mode code for anything it does not map, so clip
+-- and pad to stop the leftmost section resizing every time the mode changes.
+local function abbreviate_mode(name)
+  local short = vim.fn.strcharpart(MODE_ABBREVIATIONS[name] or name, 0, MAX_MODE_CHARS)
+  return short .. string.rep(" ", MAX_MODE_CHARS - vim.fn.strchars(short))
+end
+
+local mode = {
+  "mode",
+  fmt = abbreviate_mode,
+  separator = { left = HALF_CIRCLE_LEFT },
+  padding = { left = 1, right = 2 },
+}
 
 local branch = {
   "branch",
@@ -81,9 +116,7 @@ return {
     },
 
     sections = {
-      lualine_a = {
-        { "mode", separator = { left = HALF_CIRCLE_LEFT }, padding = { left = 1, right = 2 } },
-      },
+      lualine_a = { mode },
       lualine_b = {
         branch,
         { "filetype", icon_only = true, separator = "", padding = { left = 1, right = 0 } },

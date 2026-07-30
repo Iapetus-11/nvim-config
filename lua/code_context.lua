@@ -9,25 +9,12 @@ local ELEMENT = "󰅩"
 local SELECTOR = "󰏘"
 local AT_RULE = ""
 
-local function child_of_type(node, wanted)
-  for child in node:iter_children() do
-    if child:type() == wanted then
-      return child
-    end
-  end
-end
+local MAX_DEPTH = 5
+local SEPARATOR = " > "
+local ELLIPSIS = "…"
 
 -- `impl_item` names itself with `type`; the other code kinds use `name`.
 local NAME_FIELDS = { "name", "type" }
-
-local function field_text(node, bufnr)
-  for _, field in ipairs(NAME_FIELDS) do
-    local named = node:field(field)[1]
-    if named then
-      return vim.treesitter.get_node_text(named, bufnr)
-    end
-  end
-end
 
 -- Nodes that lend their name to an anonymous value, as in `const foo = () => {}`.
 local NAMERS = {
@@ -37,18 +24,6 @@ local NAMERS = {
   pair = true,
   field = true,
 }
-
-local function code_name(node, bufnr)
-  local name = field_text(node, bufnr)
-  if name then
-    return name
-  end
-
-  local parent = node:parent()
-  if parent and NAMERS[parent:type()] then
-    return field_text(parent, bufnr)
-  end
-end
 
 -- Markup nests far deeper than code, so only elements that identify themselves
 -- or carry structural meaning earn a place in the chain.
@@ -71,9 +46,37 @@ local STRUCTURAL_TAGS = {
   style = true,
 }
 
+local function child_of_type(node, wanted)
+  for child in node:iter_children() do
+    if child:type() == wanted then
+      return child
+    end
+  end
+end
+
+local function field_text(node, bufnr)
+  for _, field in ipairs(NAME_FIELDS) do
+    local named = node:field(field)[1]
+    if named then
+      return vim.treesitter.get_node_text(named, bufnr)
+    end
+  end
+end
+
+local function code_name(node, bufnr)
+  local name = field_text(node, bufnr)
+  if name then
+    return name
+  end
+
+  local parent = node:parent()
+  if parent and NAMERS[parent:type()] then
+    return field_text(parent, bufnr)
+  end
+end
+
 local function attribute_value(attribute, bufnr)
-  local value = child_of_type(attribute, "quoted_attribute_value")
-    or child_of_type(attribute, "attribute_value")
+  local value = child_of_type(attribute, "quoted_attribute_value") or child_of_type(attribute, "attribute_value")
   if not value then
     return
   end
@@ -187,10 +190,6 @@ local kinds = {
   keyframes_statement = { icon = AT_RULE, name = at_rule_name },
 }
 
-local MAX_DEPTH = 5
-local SEPARATOR = " > "
-local ELLIPSIS = "…"
-
 -- Scopes from a single language tree, outermost first.
 local function scopes_in(tree, range, bufnr)
   local node = tree:named_node_for_range(range, { ignore_injections = true })
@@ -217,12 +216,14 @@ function M.status()
     return ""
   end
 
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-  local range = { row - 1, col, row - 1, col }
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row, col = cursor[1] - 1, cursor[2]
+  local range = { row, col, row, col }
 
   -- An injected tree's root has no parent node, so the chain is stitched one
   -- language at a time to keep the scopes that enclose the injection.
   local scopes = {}
+  ---@type vim.treesitter.LanguageTree?
   local tree = parser:language_for_range(range)
   while tree do
     scopes = vim.list_extend(scopes_in(tree, range, bufnr), scopes)
