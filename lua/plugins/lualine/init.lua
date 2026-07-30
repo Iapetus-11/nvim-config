@@ -1,5 +1,5 @@
 local utils = require("utils")
-local code_context = require("code_context")
+local code_context = require("plugins.lualine.code_context")
 local lazy_status = require("lazy.status")
 local severity = vim.diagnostic.severity
 
