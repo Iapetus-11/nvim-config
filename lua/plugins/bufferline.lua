@@ -40,7 +40,10 @@ end
 
 return {
   "akinsho/bufferline.nvim",
-  dependencies = { "nvim-tree/nvim-web-devicons" },
+  dependencies = {
+    "nvim-tree/nvim-web-devicons",
+    "catppuccin/nvim",
+  },
 
   lazy = false,
 
@@ -59,7 +62,6 @@ return {
       options = {
         diagnostics = "nvim_lsp",
         diagnostics_indicator = diagnostics_indicator,
-        always_show_bufferline = true,
         show_buffer_close_icons = false,
         -- Keep the tabline from spanning over the neo-tree sidebar.
         offsets = {
@@ -72,7 +74,6 @@ return {
         },
       },
 
-      -- Passed as a function so bufferline re-reads it on a colorscheme change.
       highlights = require("catppuccin.special.bufferline").get_theme(),
     }
   end,

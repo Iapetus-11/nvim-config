@@ -3,8 +3,5 @@ return {
 
   event = { "BufReadPre", "BufNewFile" },
 
-  opts = {
-    signcolumn = true,
-    numhl = false,
-  },
+  opts = {},
 }

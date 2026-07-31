@@ -1,5 +1,3 @@
-local UNFOLDED = 99
-
 local PARSERS = {
   "lua",
   "luadoc",
@@ -28,22 +26,6 @@ local PARSERS = {
   "regex",
 }
 
-local function install_missing_parsers(wanted)
-  local nvim_treesitter = require("nvim-treesitter")
-  local installed = nvim_treesitter.get_installed()
-  local missing = vim.tbl_filter(function(parser)
-    return not vim.list_contains(installed, parser)
-  end, wanted)
-
-  if #missing > 0 then
-    nvim_treesitter.install(missing)
-  end
-end
-
-local function buf_is_displayed_here(buf)
-  return vim.api.nvim_get_current_buf() == buf
-end
-
 local function use_treesitter_folds()
   vim.wo[0][0].foldmethod = "expr"
   vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
@@ -53,15 +35,12 @@ return {
   "nvim-treesitter/nvim-treesitter",
   branch = "main",
   build = ":TSUpdate",
-  lazy = false,
-
-  init = function()
-    vim.opt.foldlevel = UNFOLDED
-    vim.opt.foldlevelstart = UNFOLDED
-  end,
 
   config = function()
-    install_missing_parsers(PARSERS)
+    -- The schedule keep the directory scan off the startup path.
+    vim.schedule(function()
+      require("nvim-treesitter").install(PARSERS)
+    end)
 
     vim.treesitter.language.register("json", "jsonc")
 
@@ -72,7 +51,7 @@ return {
           return
         end
 
-        if buf_is_displayed_here(args.buf) then
+        if vim.api.nvim_get_current_buf() == args.buf then
           use_treesitter_folds()
         end
       end,

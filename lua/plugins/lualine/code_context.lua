@@ -209,14 +209,12 @@ local function scopes_in(tree, range, bufnr)
   return scopes
 end
 
-function M.status()
-  local bufnr = vim.api.nvim_get_current_buf()
+local function context_at(bufnr, cursor)
   local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
   if not ok or not parser then
     return ""
   end
 
-  local cursor = vim.api.nvim_win_get_cursor(0)
   local row, col = cursor[1] - 1, cursor[2]
   local range = { row, col, row, col }
 
@@ -237,6 +235,23 @@ function M.status()
   end
 
   return table.concat(scopes, SEPARATOR)
+end
+
+-- The scopes only change when the cursor or the text moves, so redraws in
+-- between reuse the last result.
+local last = { key = nil, context = "" }
+
+function M.status()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local key = table.concat({ bufnr, vim.b[bufnr].changedtick, cursor[1], cursor[2] }, ":")
+
+  if key ~= last.key then
+    last.key = key
+    last.context = context_at(bufnr, cursor)
+  end
+
+  return last.context
 end
 
 return M

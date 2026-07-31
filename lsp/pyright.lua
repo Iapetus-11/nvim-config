@@ -1,4 +1,6 @@
-local M = {}
+-- pyright provides the types and completion; ruff lints and formats.
+-- pyright resolves imports from the interpreter it is given and never looks
+-- for a virtual environment itself, so the path must be found here.
 
 local VENV_DIRS = { ".venv", "venv" }
 
@@ -78,19 +80,19 @@ local function ask_poetry(client, root)
   end)
 end
 
-function M.on_init(client)
-  local root = client.root_dir
-  use_interpreter(client, interpreter_for(root))
+return {
+  on_init = function(client)
+    local root = client.root_dir
+    use_interpreter(client, interpreter_for(root))
 
-  if not poetry_hides_environment(root) then
-    return
-  end
+    if not poetry_hides_environment(root) then
+      return
+    end
 
-  if poetry_environments[root] then
-    use_interpreter(client, poetry_environments[root])
-  else
-    ask_poetry(client, root)
-  end
-end
-
-return M
+    if poetry_environments[root] then
+      use_interpreter(client, poetry_environments[root])
+    else
+      ask_poetry(client, root)
+    end
+  end,
+}

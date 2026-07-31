@@ -1,9 +1,18 @@
+-- The leaders must be set before lazy.nvim loads so plugin mappings use them.
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes"
 vim.opt.undofile = true
 
 vim.opt.laststatus = 3
+vim.o.winborder = "rounded"
+
+-- Treesitter supplies the fold expression; start with all folds open.
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
 
 -- The python3 provider only runs Python remote plugins, which I am not using right now
 -- so this saves a lot of time opening Python files

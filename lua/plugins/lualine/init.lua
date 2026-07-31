@@ -31,12 +31,23 @@ local MODE_ABBREVIATIONS = {
   TERMINAL    = "TRM",
 }
 
+-- Highlight lookups are too slow for every redraw, so the colors persist
+-- until the colorscheme changes.
+local highlight_colors = {}
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("lualine_color_cache", { clear = true }),
+  callback = function()
+    highlight_colors = {}
+  end,
+})
+
 local function foreground_color_of(highlight_group)
-  local highlight = vim.api.nvim_get_hl(0, { name = highlight_group, link = false })
-  if not highlight.fg then
-    return nil
+  if not highlight_colors[highlight_group] then
+    local fg = require("lualine.utils.utils").extract_highlight_colors(highlight_group, "fg")
+    highlight_colors[highlight_group] = { fg = fg }
   end
-  return { fg = string.format("#%06x", highlight.fg) }
+  return highlight_colors[highlight_group]
 end
 
 local pending_plugin_updates = {
@@ -106,11 +117,8 @@ return {
   "nvim-lualine/lualine.nvim",
   dependencies = { "nvim-tree/nvim-web-devicons" },
 
-  event = "VeryLazy",
-
   opts = {
     options = {
-      theme = "auto",
       component_separators = "|",
       section_separators = { left = HALF_CIRCLE_RIGHT, right = HALF_CIRCLE_LEFT },
     },
@@ -141,4 +149,17 @@ return {
 
     extensions = { "neo-tree", "lazy" },
   },
+
+  -- setup() only starts a refresh timer, and its first tick lands after the
+  -- first frame, so the statusline flickers in. Render once at VimEnter: the
+  -- startup buffers are loaded then, and the first frame is not drawn yet.
+  config = function(_, opts)
+    require("lualine").setup(opts)
+    vim.api.nvim_create_autocmd("VimEnter", {
+      once = true,
+      callback = function()
+        require("lualine").refresh({ force = true })
+      end,
+    })
+  end,
 }

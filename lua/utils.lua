@@ -13,10 +13,4 @@ function M.diagnostic_symbol(severity)
   return M.diagnostic_icons[severity] .. " "
 end
 
--- Set a keymap with sane defaults
-function M.map(mode, lhs, rhs, opts)
-  opts = vim.tbl_extend("force", { silent = true, noremap = true }, opts or {})
-  vim.keymap.set(mode, lhs, rhs, opts)
-end
-
 return M

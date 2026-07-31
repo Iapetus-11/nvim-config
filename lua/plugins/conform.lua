@@ -22,16 +22,6 @@ for _, ft in ipairs(prettier_filetypes) do
   formatters_by_ft[ft] = { "prettier" }
 end
 
-local prettier_config_cache = {}
-local function prettier_has_config(ctx)
-  local dir = vim.fs.dirname(ctx.filename)
-  if prettier_config_cache[dir] == nil then
-    vim.fn.system({ "prettier", "--find-config-path", ctx.filename })
-    prettier_config_cache[dir] = vim.v.shell_error == 0
-  end
-  return prettier_config_cache[dir]
-end
-
 return {
   "stevearc/conform.nvim",
 
@@ -52,12 +42,10 @@ return {
   opts = {
     formatters_by_ft = formatters_by_ft,
 
+    -- Prettier only runs in projects that declare a prettier config; conform
+    -- finds it with file checks, including the package.json `prettier` key.
     formatters = {
-      prettier = {
-        condition = function(_, ctx)
-          return prettier_has_config(ctx)
-        end,
-      },
+      prettier = { require_cwd = true },
     },
 
     format_on_save = {
