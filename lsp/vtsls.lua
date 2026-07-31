@@ -19,15 +19,6 @@ local TS_LANGUAGE_SETTINGS = {
 local vue_language_server_path = vim.fn.expand("$MASON/packages/vue-language-server/node_modules/@vue/language-server")
 
 return {
-  filetypes = {
-    "javascript",
-    "javascriptreact",
-    "javascript.jsx",
-    "typescript",
-    "typescriptreact",
-    "typescript.tsx",
-    "vue",
-  },
   settings = {
     vtsls = {
       enableMoveToFileCodeAction = true,

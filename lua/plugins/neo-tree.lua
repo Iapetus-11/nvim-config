@@ -27,6 +27,9 @@ local function claim_directories()
       local dir_buf = vim.api.nvim_get_current_buf()
       vim.cmd("enew")
       pcall(vim.api.nvim_buf_delete, dir_buf, { force = true })
+      -- Nvim reclaims only the buffer it started with, so this placeholder
+      -- would sit in the tabline all session. The first file opened reuses it.
+      vim.bo.buflisted = false
       require("neo-tree.command").execute({ action = "show", dir = dir })
     end,
   })
@@ -54,6 +57,13 @@ return {
     filesystem = {
       filtered_items = SHOW_ALL_FILES,
       use_libuv_file_watcher = true,
+    },
+
+    -- Space is the leader
+    window = {
+      mappings = {
+        ["<space>"] = "none",
+      },
     },
   },
 }

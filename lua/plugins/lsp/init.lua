@@ -14,6 +14,17 @@ local SERVERS = {
   "rust_analyzer",
 }
 
+-- vue_ls needs vtsls on .vue buffers too
+local VTSLS_FILETYPES = {
+  "javascript",
+  "javascriptreact",
+  "javascript.jsx",
+  "typescript",
+  "typescriptreact",
+  "typescript.tsx",
+  "vue",
+}
+
 local function toggle_inlay_hints()
   local bufnr = vim.api.nvim_get_current_buf()
   vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
@@ -48,7 +59,9 @@ return {
       float = { source = "if_many", focusable = false },
     })
 
-    -- ensure_installed installs the servers; automatic enable starts them.
+    -- Override nvim-lspconfig's lsp/vtsls.lua
+    vim.lsp.config("vtsls", { filetypes = VTSLS_FILETYPES })
+
     require("mason-lspconfig").setup({
       ensure_installed = SERVERS,
     })

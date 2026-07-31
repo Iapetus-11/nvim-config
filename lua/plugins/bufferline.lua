@@ -18,6 +18,28 @@ local function diagnostics_indicator(_, _, counts)
   return table.concat(parts, " ")
 end
 
+-- Tab clicks and cycling both act on the focused window. Run from neo-tree,
+-- they displace the tree, which then reopens on the far side of the layout.
+local function editor_window()
+  return vim.iter(vim.api.nvim_tabpage_list_wins(0)):find(function(win)
+    local buf = vim.api.nvim_win_get_buf(win)
+    return vim.bo[buf].buftype == "" and vim.bo[buf].filetype ~= "neo-tree"
+  end)
+end
+
+local function in_editor_window(action)
+  return function(...)
+    if vim.bo.buftype ~= "" or vim.bo.filetype == "neo-tree" then
+      local win = editor_window()
+      if not win then
+        return
+      end
+      vim.api.nvim_set_current_win(win)
+    end
+    action(...)
+  end
+end
+
 -- Close the current buffer while keeping the window on a real file
 local function close_buffer()
   local target = vim.api.nvim_get_current_buf()
@@ -48,8 +70,20 @@ return {
   lazy = false,
 
   keys = {
-    { "<S-h>", "<cmd>BufferLineCyclePrev<cr>", desc = "Previous buffer" },
-    { "<S-l>", "<cmd>BufferLineCycleNext<cr>", desc = "Next buffer" },
+    {
+      "<S-h>",
+      in_editor_window(function()
+        vim.cmd("BufferLineCyclePrev")
+      end),
+      desc = "Previous buffer",
+    },
+    {
+      "<S-l>",
+      in_editor_window(function()
+        vim.cmd("BufferLineCycleNext")
+      end),
+      desc = "Next buffer",
+    },
     { "<leader>bh", "<cmd>BufferLineMovePrev<cr>", desc = "Move buffer left" },
     { "<leader>bl", "<cmd>BufferLineMoveNext<cr>", desc = "Move buffer right" },
     { "<leader>bo", "<cmd>BufferLineCloseOthers<cr>", desc = "Close other buffers" },
@@ -62,6 +96,7 @@ return {
       options = {
         diagnostics = "nvim_lsp",
         diagnostics_indicator = diagnostics_indicator,
+        left_mouse_command = in_editor_window(vim.api.nvim_set_current_buf),
         show_buffer_close_icons = false,
         -- Keep the tabline from spanning over the neo-tree sidebar.
         offsets = {
