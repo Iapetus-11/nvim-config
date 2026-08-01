@@ -10,10 +10,25 @@ local function terminal(action, opts)
   end
 end
 
+-- Snacks keys a terminal by its count, so reused numbers replace each other.
+local function new_terminal()
+  local used = {}
+  for _, term in ipairs(Snacks.terminal.list()) do
+    used[vim.b[term.buf].snacks_terminal.id] = true
+  end
+
+  local id = 1
+  while used[id] do
+    id = id + 1
+  end
+
+  Snacks.terminal.open(nil, { count = id })
+end
+
 local function toggle_panel()
   local terminals = Snacks.terminal.list()
   if #terminals == 0 then
-    return Snacks.terminal.open()
+    return new_terminal()
   end
 
   local hide = #panel() > 0
@@ -53,8 +68,7 @@ local function close_exited_terminal(event)
   end
 end
 
--- Nvim aborts a quit whose starting window an autocommand closed, and snacks
--- closes its terminals on exit. So ask again once the panel is gone.
+-- Nvim aborts a quit whose starting window an autocommand closed.
 local function retry_exit_from_panel()
   if vim.b.snacks_terminal then
     vim.schedule(function()
@@ -84,8 +98,13 @@ return {
   keys = {
     { "<C-\\>", toggle_panel, mode = { "n", "t" }, desc = "Toggle terminal panel" },
     { "<leader>tt", terminal("toggle"), desc = "Toggle terminal" },
-    { "<leader>tn", terminal("open"), desc = "New terminal" },
-    { "<leader>tf", terminal("toggle", { win = { position = "float" } }), desc = "Floating terminal" },
+    { "<leader>tn", new_terminal, desc = "New terminal" },
+    -- Count 0 keeps the float out of the numbered panel terminals.
+    {
+      "<leader>tf",
+      terminal("toggle", { count = 0, win = { position = "float", wo = { winbar = "" } } }),
+      desc = "Floating terminal",
+    },
   },
 
   ---@module 'snacks'
@@ -97,7 +116,10 @@ return {
       win = {
         position = "bottom",
         height = 0.3,
-        wo = { winbar = "%{%v:lua.require'utils'.terminal_tab()%}" },
+        wo = {
+          winbar = "%{%v:lua.require'utils'.terminal_tab()%}",
+          winhighlight = "",
+        },
         keys = {
           next_terminal = { "<S-l>", cycle_terminal(1), desc = "Next terminal" },
           prev_terminal = { "<S-h>", cycle_terminal(-1), desc = "Previous terminal" },
