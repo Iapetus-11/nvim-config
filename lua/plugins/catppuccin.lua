@@ -5,6 +5,7 @@ return {
   opts = {
     flavour = "macchiato",
     transparent_background = true,
+    float = { transparent = true },
   },
   config = function(_, opts)
     require("catppuccin").setup(opts)
