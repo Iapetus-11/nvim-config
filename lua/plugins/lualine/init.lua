@@ -8,28 +8,6 @@ local HALF_CIRCLE_RIGHT = ""
 
 local WHOLE_PATH_PARTS = 3
 local MAX_BRANCH_CHARS = 32
-local MAX_MODE_CHARS = 3
-
--- stylua: ignore
-local MODE_ABBREVIATIONS = {
-  NORMAL      = "NOR",
-  INSERT      = "INS",
-  VISUAL      = "VIS",
-  ["V-LINE"]  = "V-L",
-  ["V-BLOCK"] = "V-B",
-  SELECT      = "SEL",
-  ["S-LINE"]  = "S-L",
-  ["S-BLOCK"] = "S-B",
-  REPLACE     = "REP",
-  ["V-REPLACE"] = "V-R",
-  COMMAND     = "CMD",
-  EX          = "EX",
-  ["O-PENDING"] = "PND",
-  MORE        = "MOR",
-  CONFIRM     = "CNF",
-  SHELL       = "SHL",
-  TERMINAL    = "TRM",
-}
 
 -- Highlight lookups are too slow for every redraw, so the colors persist
 -- until the colorscheme changes.
@@ -89,16 +67,8 @@ local file_name = {
   fmt = shorten_path,
 }
 
--- lualine falls back to the raw mode code for anything it does not map, so clip
--- and pad to stop the leftmost section resizing every time the mode changes.
-local function abbreviate_mode(name)
-  local short = vim.fn.strcharpart(MODE_ABBREVIATIONS[name] or name, 0, MAX_MODE_CHARS)
-  return short .. string.rep(" ", MAX_MODE_CHARS - vim.fn.strchars(short))
-end
-
 local mode = {
   "mode",
-  fmt = abbreviate_mode,
   separator = { left = HALF_CIRCLE_LEFT },
   padding = { left = 1, right = 2 },
 }
