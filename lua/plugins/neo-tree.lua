@@ -1,8 +1,9 @@
-local SHOW_ALL_FILES = {
+local FILTERED_ITEMS = {
   hide_dotfiles = false,
   hide_gitignored = false,
   hide_ignored = false,
   hide_hidden = false,
+  never_show = { ".git", ".idea" },
 }
 
 -- Neo-tree must get all directory buffers. Two problems prevent this. Netrw
@@ -55,7 +56,7 @@ return {
   ---@type neotree.Config
   opts = {
     filesystem = {
-      filtered_items = SHOW_ALL_FILES,
+      filtered_items = FILTERED_ITEMS,
       use_libuv_file_watcher = true,
     },
 
