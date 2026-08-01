@@ -8,6 +8,7 @@ vim.opt.signcolumn = "yes"
 vim.opt.undofile = true
 
 vim.opt.laststatus = 3
+vim.opt.showmode = false
 vim.o.winborder = "rounded"
 
 -- Treesitter supplies the fold expression; start with all folds open.
