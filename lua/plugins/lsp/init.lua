@@ -1,7 +1,8 @@
 local utils = require("utils")
 
 -- Per-server settings live in lsp/<server>.lua at the config root; Neovim
--- merges those files on its own. This list only drives mason.
+-- merges those files on its own. This list decides what mason installs and
+-- which servers actually start.
 local SERVERS = {
   "lua_ls",
   "ruff",
@@ -62,8 +63,12 @@ return {
     -- Override nvim-lspconfig's lsp/vtsls.lua
     vim.lsp.config("vtsls", { filetypes = VTSLS_FILETYPES })
 
+    -- `automatic_enable` defaults to every server mason has installed, which
+    -- starts leftovers from an earlier config alongside their replacement.
+    -- Passing the list makes it authoritative in both directions.
     require("mason-lspconfig").setup({
       ensure_installed = SERVERS,
+      automatic_enable = SERVERS,
     })
   end,
 }
