@@ -1,6 +1,6 @@
--- pyright provides the types and completion; ruff lints and formats.
--- pyright resolves imports from the interpreter it is given and never looks
--- for a virtual environment itself, so the path must be found here.
+-- basedpyright provides the types and completion; ruff lints and formats.
+-- basedpyright resolves imports from the interpreter it is given and never
+-- looks for a virtual environment itself, so the path must be found here.
 
 local VENV_DIRS = { ".venv", "venv" }
 
@@ -81,6 +81,15 @@ local function ask_poetry(client, root)
 end
 
 return {
+  settings = {
+    basedpyright = {
+      analysis = {
+        typeCheckingMode = "standard",
+        autoImportCompletions = true,
+      },
+    },
+  },
+
   on_init = function(client)
     local root = client.root_dir
     use_interpreter(client, interpreter_for(root))

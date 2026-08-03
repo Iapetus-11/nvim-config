@@ -5,7 +5,7 @@ local utils = require("utils")
 local SERVERS = {
   "lua_ls",
   "ruff",
-  "pyright",
+  "basedpyright",
   "html",
   "bashls",
   "vtsls",
