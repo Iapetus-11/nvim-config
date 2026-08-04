@@ -18,18 +18,17 @@ local function diagnostics_indicator(_, _, counts)
   return table.concat(parts, " ")
 end
 
--- Tab clicks and cycling both act on the focused window. Run from neo-tree,
--- they displace the tree, which then reopens on the far side of the layout.
+-- Tab clicks and cycling both act on the focused window. Run from a special
+-- window (neo-tree, quickfix, ...), they would displace it with a file buffer.
 local function editor_window()
   return vim.iter(vim.api.nvim_tabpage_list_wins(0)):find(function(win)
-    local buf = vim.api.nvim_win_get_buf(win)
-    return vim.bo[buf].buftype == "" and vim.bo[buf].filetype ~= "neo-tree"
+    return vim.bo[vim.api.nvim_win_get_buf(win)].buftype == ""
   end)
 end
 
 local function in_editor_window(action)
   return function(...)
-    if vim.bo.buftype ~= "" or vim.bo.filetype == "neo-tree" then
+    if vim.bo.buftype ~= "" then
       local win = editor_window()
       if not win then
         return
@@ -98,15 +97,6 @@ return {
         diagnostics_indicator = diagnostics_indicator,
         left_mouse_command = in_editor_window(vim.api.nvim_set_current_buf),
         show_buffer_close_icons = false,
-        -- Keep the tabline from spanning over the neo-tree sidebar.
-        offsets = {
-          {
-            filetype = "neo-tree",
-            text = "Files",
-            highlight = "Directory",
-            separator = true,
-          },
-        },
       },
 
       highlights = require("catppuccin.special.bufferline").get_theme(),
