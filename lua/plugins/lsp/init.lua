@@ -38,7 +38,6 @@ return {
   event = { "BufReadPre", "BufNewFile" },
 
   dependencies = {
-    "folke/neoconf.nvim",
     "mason-org/mason.nvim",
     "mason-org/mason-lspconfig.nvim",
   },
@@ -49,8 +48,6 @@ return {
   },
 
   config = function()
-    require("neoconf").setup()
-
     require("plugins.lsp.keymaps")
 
     vim.diagnostic.config({
