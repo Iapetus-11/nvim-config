@@ -37,24 +37,29 @@ local function claim_directories()
 end
 
 local function sidebar_source()
-  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
-    local source = vim.b[vim.api.nvim_win_get_buf(win)].neo_tree_source
-    if source then
-      return source
-    end
-  end
+  return vim.iter(vim.api.nvim_tabpage_list_wins(0))
+    :map(function(win)
+      return vim.b[vim.api.nvim_win_get_buf(win)].neo_tree_source
+    end)
+    :next()
 end
 
--- Switching sources in-place is broken upstream: the reused window never
--- gains focus, and showing the git view runs `git status`, whose event
--- prompts a filesystem rescan that steals the window back. Closing first
--- avoids both: a windowless source only marks itself dirty, and freshly
--- created windows are focused.
-local function show(source, args)
-  if sidebar_source() ~= source then
-    vim.cmd("Neotree close")
+-- In-place source switches are broken upstream: the reused window is never
+-- focused, and a git-triggered filesystem rescan steals the window back.
+-- Reopening from closed avoids both.
+local function show(args)
+  if sidebar_source() ~= args.source then
+    require("neo-tree.command").execute({ action = "close" })
   end
-  require("neo-tree.command").execute(vim.tbl_extend("keep", { source = source, action = "focus" }, args or {}))
+  require("neo-tree.command").execute(args)
+end
+
+local function toggle()
+  if sidebar_source() then
+    require("neo-tree.command").execute({ action = "close" })
+  else
+    show({ source = "filesystem" })
+  end
 end
 
 return {
@@ -69,18 +74,18 @@ return {
   init = claim_directories,
 
   keys = {
-    { "<leader>E", "<cmd>Neotree toggle<cr>", desc = "Toggle file explorer" },
+    { "<leader>E", toggle, desc = "Toggle file explorer" },
     {
       "<leader>e",
       function()
-        show("filesystem", { reveal = true })
+        show({ source = "filesystem", reveal = true })
       end,
       desc = "Reveal current file in explorer",
     },
     {
       "<leader>g",
       function()
-        show("git_status")
+        show({ source = "git_status" })
       end,
       desc = "Git changes",
     },
@@ -102,21 +107,30 @@ return {
 
     window = {
       mappings = {
-    	-- Space is the leader
+        -- Space is the leader
         ["<space>"] = "none",
       },
     },
+
+    -- The git view's status command enumerates every ignored file, which can
+    -- be extremely slow.
+    event_handlers = {
+      {
+        event = "before_git_status",
+        id = "ignored-dirs-only",
+        handler = function(args)
+          if not vim.tbl_contains(args.status_args, "--untracked-files=all") then
+            return
+          end
+          for i, arg in ipairs(args.status_args) do
+            if vim.startswith(arg, "--ignored") then
+              args.status_args[i] = "--ignored=matching"
+              return
+            end
+          end
+          vim.notify("Expected neo-tree to pass --ignored; git status may be slow", vim.log.levels.WARN)
+        end,
+      },
+    },
   },
-
-  config = function(_, opts)
-    local git = require("neo-tree.git")
-
-    -- Skip ignored files for a speed boost
-    local status = git.status
-    git.status = function(path, base, bubble, status_opts)
-      return status(path, base, bubble, vim.tbl_extend("force", status_opts or {}, { ignored = "matching" }))
-    end
-
-    require("neo-tree").setup(opts)
-  end,
 }
