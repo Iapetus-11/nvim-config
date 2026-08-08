@@ -112,9 +112,21 @@ return {
       },
     },
 
-    -- The git view's status command enumerates every ignored file, which can
-    -- be extremely slow.
     event_handlers = {
+      -- The git watcher only sees the .git directory, so working-tree edits
+      -- made outside Nvim leave the view stale until it is focused again.
+      {
+        event = "neo_tree_buffer_enter",
+        id = "refresh-git-on-focus",
+        handler = function()
+          if vim.b.neo_tree_source == "git_status" then
+            require("neo-tree.sources.git_status").refresh()
+          end
+        end,
+      },
+
+      -- The git view's status command enumerates every ignored file, which can
+      -- be extremely slow.
       {
         event = "before_git_status",
         id = "ignored-dirs-only",
