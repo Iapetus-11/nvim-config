@@ -7,6 +7,12 @@ return {
   opts = {
     keymap = { preset = "super-tab" },
 
+    sources = {
+      providers = {
+        lsp = { transform_items = require("patches.vue-duplicate-auto-import") },
+      },
+    },
+
     completion = {
       documentation = { auto_show = true, auto_show_delay_ms = 250 },
     },

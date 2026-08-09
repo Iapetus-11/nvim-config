@@ -57,6 +57,7 @@ return {
       signs = { text = utils.diagnostic_icons },
       float = { source = "if_many", focusable = false },
     })
+    require("patches.diagnostic-virtual-lines-crash")
 
     -- Override nvim-lspconfig's lsp/vtsls.lua
     vim.lsp.config("vtsls", { filetypes = VTSLS_FILETYPES })

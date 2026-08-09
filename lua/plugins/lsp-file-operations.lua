@@ -18,6 +18,6 @@ return {
 
   config = function(_, opts)
     require("lsp-file-operations").setup(opts)
-    require("plugins.lsp.vue-rename").setup()
+    require("patches.vue-rename").setup()
   end,
 }
