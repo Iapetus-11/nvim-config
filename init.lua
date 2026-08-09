@@ -6,6 +6,7 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.signcolumn = "yes"
 vim.opt.undofile = true
+vim.opt.clipboard = "unnamedplus"
 
 vim.opt.laststatus = 3
 vim.opt.showmode = false

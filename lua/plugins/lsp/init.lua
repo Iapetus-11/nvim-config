@@ -40,6 +40,7 @@ return {
   dependencies = {
     "mason-org/mason.nvim",
     "mason-org/mason-lspconfig.nvim",
+    "antosha417/nvim-lsp-file-operations",
   },
 
   keys = {
@@ -59,6 +60,10 @@ return {
 
     -- Override nvim-lspconfig's lsp/vtsls.lua
     vim.lsp.config("vtsls", { filetypes = VTSLS_FILETYPES })
+
+    vim.lsp.config("*", {
+      capabilities = require("lsp-file-operations").default_capabilities(),
+    })
 
     -- `automatic_enable` defaults to every server mason has installed, which
     -- starts leftovers from an earlier config alongside their replacement.
