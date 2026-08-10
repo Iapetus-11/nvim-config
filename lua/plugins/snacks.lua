@@ -118,15 +118,16 @@ return {
   end,
 
   keys = {
+    {
+      "<leader>G",
+      function()
+        Snacks.lazygit()
+      end,
+      desc = "Lazygit",
+    },
     { "<C-\\>", toggle_panel, mode = { "n", "t" }, desc = "Toggle terminal panel" },
     { "<leader>tt", terminal("toggle"), desc = "Toggle terminal" },
     { "<leader>tn", new_terminal, desc = "New terminal" },
-    -- Count 0 keeps the float out of the numbered panel terminals.
-    {
-      "<leader>tf",
-      terminal("toggle", { count = 0, win = { position = "float", wo = { winbar = "" } } }),
-      desc = "Floating terminal",
-    },
   },
 
   ---@module 'snacks'
