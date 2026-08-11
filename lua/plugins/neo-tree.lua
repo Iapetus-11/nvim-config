@@ -54,6 +54,27 @@ local function show(args)
   require("neo-tree.command").execute(args)
 end
 
+-- Ensure :q in the last file window closes Neo-tree too.
+local function close_with_last_file_window()
+  vim.api.nvim_create_autocmd("QuitPre", {
+    desc = "Close neo-tree when the last file window quits",
+    callback = function()
+      if vim.bo.buftype ~= "" then
+        return
+      end
+      local current = vim.api.nvim_get_current_win()
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        local is_sidebar = vim.b[vim.api.nvim_win_get_buf(win)].neo_tree_source
+        local is_floating = vim.api.nvim_win_get_config(win).relative ~= ""
+        if win ~= current and not is_sidebar and not is_floating then
+          return
+        end
+      end
+      require("neo-tree.command").execute({ action = "close" })
+    end,
+  })
+end
+
 local function toggle()
   if sidebar_source() then
     require("neo-tree.command").execute({ action = "close" })
@@ -71,7 +92,10 @@ return {
     "nvim-tree/nvim-web-devicons",
   },
   lazy = false,
-  init = claim_directories,
+  init = function()
+    claim_directories()
+    close_with_last_file_window()
+  end,
 
   keys = {
     { "<leader>E", toggle, desc = "Toggle file explorer" },
