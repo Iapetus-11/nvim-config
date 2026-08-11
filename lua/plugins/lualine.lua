@@ -1,5 +1,4 @@
 local utils = require("utils")
-local code_context = require("plugins.lualine.code_context")
 local lazy_status = require("lazy.status")
 local severity = vim.diagnostic.severity
 
@@ -33,13 +32,6 @@ local pending_plugin_updates = {
   cond = lazy_status.has_updates,
   color = function()
     return foreground_color_of("Special")
-  end,
-}
-
-local cursor_scope = {
-  code_context.status,
-  color = function()
-    return foreground_color_of("Comment")
   end,
 }
 
@@ -109,7 +101,7 @@ return {
           },
         },
       },
-      lualine_c = { cursor_scope },
+      lualine_c = {},
       lualine_x = { pending_plugin_updates },
       lualine_y = { "progress" },
       lualine_z = {
