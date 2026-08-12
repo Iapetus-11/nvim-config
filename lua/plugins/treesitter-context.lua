@@ -4,6 +4,7 @@ return {
   opts = {
     max_lines = 3,
     separator = "─",
+    multiline_threshold = 1,
   },
 
   config = function(_, opts)
