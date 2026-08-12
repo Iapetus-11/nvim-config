@@ -31,6 +31,11 @@ local function toggle_panel()
     return new_terminal()
   end
 
+  -- list() is hash-ordered, so show in id order to keep the arrangement stable.
+  table.sort(terminals, function(a, b)
+    return vim.b[a.buf].snacks_terminal.id < vim.b[b.buf].snacks_terminal.id
+  end)
+
   local hide = #panel() > 0
   for _, term in ipairs(terminals) do
     if hide then
