@@ -12,6 +12,12 @@ local function goto_definition()
   center_after_jump()
 end
 
+-- <leader>uh toggles them per buffer
+local INLAY_HINT_SERVERS = {
+  vtsls = true,
+  rust_analyzer = true,
+}
+
 local function ts_code_action(kind)
   return function()
     vim.lsp.buf.code_action({
@@ -31,16 +37,19 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("gd", goto_definition, "Go to definition")
 
     local client = vim.lsp.get_client_by_id(args.data.client_id)
-    if client and client.name == "vtsls" then
+    if not client then
+      return
+    end
+
+    if INLAY_HINT_SERVERS[client.name] and client:supports_method("textDocument/inlayHint") then
+      vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+    end
+
+    if client.name == "vtsls" then
       map("<leader>co", ts_code_action("source.organizeImports"), "Organize imports")
       map("<leader>cM", ts_code_action("source.addMissingImports.ts"), "Add missing imports")
       map("<leader>cu", ts_code_action("source.removeUnused.ts"), "Remove unused")
       map("<leader>cD", ts_code_action("source.fixAll.ts"), "Fix all diagnostics")
-
-      -- Inlay hints start enabled in TS; <leader>uh toggles them per buffer.
-      if client:supports_method("textDocument/inlayHint") then
-        vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
-      end
     end
   end,
 })

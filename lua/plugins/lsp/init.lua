@@ -50,6 +50,7 @@ return {
 
   config = function()
     require("plugins.lsp.keymaps")
+    require("plugins.lsp.code_actions")
 
     vim.diagnostic.config({
       virtual_text = false,
