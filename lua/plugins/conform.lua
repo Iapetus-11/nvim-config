@@ -1,3 +1,8 @@
+local formatters_by_ft = {
+  rust = { "rustfmt" },
+  python = { "ruff_format" },
+}
+
 local prettier_filetypes = {
   "javascript",
   "javascriptreact",
@@ -16,11 +21,11 @@ local prettier_filetypes = {
   "graphql",
   "handlebars",
 }
-
-local formatters_by_ft = {}
-for _, ft in ipairs(prettier_filetypes) do
-  formatters_by_ft[ft] = { "prettier" }
+for _, file_type in ipairs(prettier_filetypes) do
+  formatters_by_ft[file_type] = { "prettier" }
 end
+
+local format_on_save_filetypes = vim.list_extend({ "rust" }, prettier_filetypes)
 
 return {
   "stevearc/conform.nvim",
@@ -48,9 +53,10 @@ return {
       prettier = { require_cwd = true },
     },
 
-    format_on_save = {
-      timeout_ms = 2000,
-      lsp_format = "never",
-    },
+    format_on_save = function(bufnr)
+      if vim.tbl_contains(format_on_save_filetypes, vim.bo[bufnr].filetype) then
+        return { timeout_ms = 2000, lsp_format = "never" }
+      end
+    end,
   },
 }
