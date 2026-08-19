@@ -5,6 +5,10 @@ vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
 vim.opt.softtabstop = 4
 
+vim.g.python_indent = {
+  closed_paren_align_last_line = false,
+}
+
 local FILETYPE_INDENT = {
   lua = 2,
   markdown = 2,
