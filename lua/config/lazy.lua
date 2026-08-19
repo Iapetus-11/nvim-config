@@ -21,6 +21,7 @@ require("lazy").setup({
     -- import your plugins
     { import = "plugins" },
   },
+  ui = { border = "rounded" },
   install = { colorscheme = { "habamax" } },
   checker = { enabled = true, notify = false },
   change_detection = { notify = false },
