@@ -48,6 +48,7 @@ return {
     return {
       adapters = {
         require("neotest-python")({ runner = "pytest" }),
+        require("rustaceanvim.neotest"),
       },
     }
   end,

@@ -12,7 +12,6 @@ local SERVERS = {
   "vtsls",
   "vue_ls",
   "eslint",
-  "rust_analyzer",
 }
 
 -- vue_ls needs vtsls on .vue buffers too
