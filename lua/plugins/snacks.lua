@@ -82,27 +82,6 @@ local function retry_exit_from_panel()
   end
 end
 
--- Nvim scrolls a buffer until its last line reaches the top of the window. In a
--- terminal that leaves a screen of blank space under the output.
-local function clamp_terminal_scroll(event)
-  local win = tonumber(event.match)
-  if not win or not vim.api.nvim_win_is_valid(win) then
-    return
-  end
-  if vim.bo[vim.api.nvim_win_get_buf(win)].buftype ~= "terminal" then
-    return
-  end
-
-  vim.api.nvim_win_call(win, function()
-    local view = vim.fn.winsaveview()
-    local last_topline = math.max(1, vim.fn.line("$") - vim.fn.winheight(0) + 1)
-    if view.topline > last_topline then
-      view.topline = last_topline
-      vim.fn.winrestview(view)
-    end
-  end)
-end
-
 local function link_tab_highlights()
   vim.api.nvim_set_hl(0, "WinBar", { link = "BufferLineBufferSelected" })
   vim.api.nvim_set_hl(0, "WinBarNC", { link = "BufferLineBackground" })
@@ -119,7 +98,6 @@ return {
     vim.api.nvim_create_autocmd("ColorScheme", { callback = link_tab_highlights })
     vim.api.nvim_create_autocmd("TermClose", { callback = close_exited_terminal })
     vim.api.nvim_create_autocmd("ExitPre", { callback = retry_exit_from_panel })
-    vim.api.nvim_create_autocmd("WinScrolled", { callback = clamp_terminal_scroll })
   end,
 
   keys = {
@@ -140,7 +118,8 @@ return {
   opts = {
     terminal = {
       auto_close = false,
-      auto_insert = false,
+      auto_insert = true,
+      start_insert = true,
 
       win = {
         position = "bottom",
