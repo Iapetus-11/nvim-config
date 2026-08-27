@@ -1,3 +1,10 @@
+local last_terminal_id
+local toggling_panel = false
+
+local function terminal_id(term)
+  return vim.b[term.buf].snacks_terminal.id
+end
+
 local function panel()
   return vim.tbl_filter(function(term)
     return term:win_valid()
@@ -31,18 +38,37 @@ local function toggle_panel()
     return new_terminal()
   end
 
+  if vim.b.snacks_terminal then
+    last_terminal_id = vim.b.snacks_terminal.id
+  end
+
   -- list() is hash-ordered, so show in id order to keep the arrangement stable.
   table.sort(terminals, function(a, b)
-    return vim.b[a.buf].snacks_terminal.id < vim.b[b.buf].snacks_terminal.id
+    return terminal_id(a) < terminal_id(b)
   end)
 
   local hide = #panel() > 0
+  local focus_id = last_terminal_id
+  local focus_win
+
+  -- Hiding/showing several split terminals fires BufEnter as Neovim moves
+  -- through the remaining windows. Don't let those transient focus changes
+  -- replace the terminal the user actually had focused.
+  toggling_panel = true
   for _, term in ipairs(terminals) do
     if hide then
       term:hide()
     else
       term:show()
+      if terminal_id(term) == focus_id then
+        focus_win = term.win
+      end
     end
+  end
+  toggling_panel = false
+
+  if focus_win and vim.api.nvim_win_is_valid(focus_win) then
+    vim.api.nvim_set_current_win(focus_win)
   end
 end
 
@@ -82,6 +108,12 @@ local function retry_exit_from_panel()
   end
 end
 
+local function remember_terminal()
+  if not toggling_panel and vim.b.snacks_terminal then
+    last_terminal_id = vim.b.snacks_terminal.id
+  end
+end
+
 local function link_tab_highlights()
   vim.api.nvim_set_hl(0, "WinBar", { link = "BufferLineBufferSelected" })
   vim.api.nvim_set_hl(0, "WinBarNC", { link = "BufferLineBackground" })
@@ -98,6 +130,7 @@ return {
     vim.api.nvim_create_autocmd("ColorScheme", { callback = link_tab_highlights })
     vim.api.nvim_create_autocmd("TermClose", { callback = close_exited_terminal })
     vim.api.nvim_create_autocmd("ExitPre", { callback = retry_exit_from_panel })
+    vim.api.nvim_create_autocmd("BufEnter", { callback = remember_terminal })
   end,
 
   keys = {
@@ -108,7 +141,7 @@ return {
       end,
       desc = "Lazygit",
     },
-    { "<C-\\>", toggle_panel, mode = { "n", "t" }, desc = "Toggle terminal panel" },
+    { "<C-\\>", toggle_panel, mode = { "n", "t" }, nowait = true, desc = "Toggle terminal panel" },
     { "<leader>tt", terminal("toggle"), desc = "Toggle terminal" },
     { "<leader>tn", new_terminal, desc = "New terminal" },
   },
