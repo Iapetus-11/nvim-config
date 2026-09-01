@@ -25,7 +25,12 @@ for _, file_type in ipairs(prettier_filetypes) do
   formatters_by_ft[file_type] = { "prettier" }
 end
 
-local format_on_save_filetypes = vim.list_extend({ "rust" }, prettier_filetypes)
+local format_on_save_filetypes = vim.list_extend(
+  { "rust" },
+  vim.tbl_filter(function(file_type)
+    return file_type ~= "graphql"
+  end, prettier_filetypes)
+)
 
 return {
   "stevearc/conform.nvim",
