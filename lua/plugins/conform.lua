@@ -1,5 +1,6 @@
 local formatters_by_ft = {
   rust = { "rustfmt" },
+  c = { "clang_format" },
   python = { "ruff_format" },
 }
 

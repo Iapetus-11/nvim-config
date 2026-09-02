@@ -9,6 +9,7 @@ local SERVERS = {
   "basedpyright",
   "html",
   "bashls",
+  "clangd",
   "vtsls",
   "vue_ls",
   "eslint",

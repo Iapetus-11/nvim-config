@@ -16,6 +16,7 @@ end
 local INLAY_HINT_SERVERS = {
   vtsls = true,
   rust_analyzer = true,
+  clangd = true,
 }
 
 local function ts_code_action(kind)

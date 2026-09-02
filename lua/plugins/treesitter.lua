@@ -6,6 +6,7 @@ local PARSERS = {
   "query",
   "python",
   "rust",
+  "c",
   "typescript",
   "javascript",
   "tsx",
