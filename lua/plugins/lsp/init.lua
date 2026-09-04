@@ -49,6 +49,7 @@ return {
   },
 
   config = function()
+    require("patches.inlay-hint-col-out-of-range")
     require("plugins.lsp.keymaps")
     require("plugins.lsp.code_actions")
 
