@@ -3,7 +3,6 @@ local FILTERED_ITEMS = {
   hide_gitignored = false,
   hide_ignored = false,
   hide_hidden = false,
-  never_show = { ".git", ".idea" },
 }
 
 -- Neo-tree must get all directory buffers. Two problems prevent this. Netrw
