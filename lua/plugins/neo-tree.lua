@@ -82,6 +82,43 @@ local function toggle()
   end
 end
 
+local function reveal_in_file_manager()
+  local state = require("neo-tree.sources.manager").get_state_for_window()
+  local node = state and state.tree and state.tree:get_node()
+  if not node then
+    return
+  end
+
+  local path = node:get_id()
+  local command
+  if vim.fn.has("mac") == 1 then
+    command = { "open", "-R", path }
+  elseif node.type == "directory" then
+    command = { "xdg-open", path }
+  else
+    command = { "xdg-open", vim.fn.fnamemodify(path, ":h") }
+  end
+  vim.system(command, { detach = true })
+end
+
+local function add_file_manager_context_menu()
+  vim.api.nvim_create_user_command("NeoTreeRevealInFileManager", reveal_in_file_manager, {
+    desc = "Reveal the selected Neo-tree item in the system file manager",
+  })
+
+  local label = vim.fn.has("mac") == 1 and "Reveal\\ in\\ Finder" or "Open\\ in\\ File\\ Manager"
+  vim.api.nvim_create_autocmd("MenuPopup", {
+    pattern = "n",
+    desc = "Add the system file manager to Neo-tree's context menu",
+    callback = function()
+      vim.cmd("silent! aunmenu PopUp." .. label)
+      if vim.b.neo_tree_source then
+        vim.cmd("nnoremenu <silent> 10 PopUp." .. label .. " <Cmd>NeoTreeRevealInFileManager<CR>")
+      end
+    end,
+  })
+end
+
 return {
   "nvim-neo-tree/neo-tree.nvim",
   branch = "v3.x",
@@ -94,6 +131,7 @@ return {
   init = function()
     claim_directories()
     close_with_last_file_window()
+    add_file_manager_context_menu()
   end,
 
   keys = {
