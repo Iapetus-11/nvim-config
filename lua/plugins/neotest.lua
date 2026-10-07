@@ -4,6 +4,8 @@ return {
     "nvim-neotest/nvim-nio",
     "nvim-lua/plenary.nvim",
     "nvim-neotest/neotest-python",
+    "olimorris/neotest-rspec",
+    "zidhuss/neotest-minitest",
   },
 
   keys = {
@@ -49,6 +51,10 @@ return {
       adapters = {
         require("neotest-python")({ runner = "pytest" }),
         require("rustaceanvim.neotest"),
+        require("neotest-rspec"),
+        require("neotest-minitest")({
+          test_cmd = { "bundle", "exec", "rails", "test" },
+        }),
       },
     }
   end,

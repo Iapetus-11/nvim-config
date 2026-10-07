@@ -75,5 +75,8 @@ return {
       ensure_installed = SERVERS,
       automatic_enable = SERVERS,
     })
+
+    -- Ruby LSP is installed through asdf so it runs under the project's Ruby.
+    vim.lsp.enable("ruby_lsp")
   end,
 }

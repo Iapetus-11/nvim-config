@@ -1,5 +1,6 @@
 local formatters_by_ft = {
   rust = { "rustfmt" },
+  ruby = { lsp_format = "fallback" },
   c = { "clang_format" },
   python = { "ruff_format", "autopep8", stop_after_first = true },
 }
@@ -27,7 +28,7 @@ for _, file_type in ipairs(prettier_filetypes) do
 end
 
 local format_on_save_filetypes = vim.list_extend(
-  { "rust" },
+  { "rust", "ruby" },
   vim.tbl_filter(function(file_type)
     return file_type ~= "graphql"
   end, prettier_filetypes)
@@ -57,7 +58,7 @@ return {
     {
       "<leader>f",
       function()
-        require("conform").format({ async = true, lsp_format = "never" })
+        require("conform").format({ async = true })
       end,
       mode = { "n", "v" },
       desc = "Format buffer",
@@ -83,8 +84,10 @@ return {
     },
 
     format_on_save = function(bufnr)
-      if vim.tbl_contains(format_on_save_filetypes, vim.bo[bufnr].filetype) then
-        return { timeout_ms = 2000, lsp_format = "never" }
+      local filetype = vim.bo[bufnr].filetype
+
+      if vim.tbl_contains(format_on_save_filetypes, filetype) then
+        return { timeout_ms = 2000 }
       end
     end,
   },

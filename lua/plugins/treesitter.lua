@@ -5,6 +5,8 @@ local PARSERS = {
   "vimdoc",
   "query",
   "python",
+  "ruby",
+  "embedded_template",
   "rust",
   "c",
   "typescript",
@@ -36,6 +38,8 @@ return {
   "nvim-treesitter/nvim-treesitter",
   branch = "main",
   build = ":TSUpdate",
+
+  dependencies = { "RRethy/nvim-treesitter-endwise" },
 
   config = function()
     -- The schedule keep the directory scan off the startup path.
