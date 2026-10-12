@@ -6,7 +6,8 @@ return {
     "nvim-neo-tree/neo-tree.nvim",
   },
 
-  lazy = true,
+  -- File explorer integrations are registered during setup, after neo-tree loads.
+  lazy = false,
 
   opts = {
     operations = {

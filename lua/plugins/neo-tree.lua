@@ -170,6 +170,8 @@ return {
       mappings = {
         -- Space is the leader
         ["<space>"] = "none",
+        ["H"] = "none",
+        ["L"] = "none",
       },
     },
 
