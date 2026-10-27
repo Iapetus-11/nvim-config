@@ -101,6 +101,33 @@ local function reveal_in_file_manager()
   vim.system(command, { detach = true })
 end
 
+local function focus_first_change(buf, attempts)
+  if vim.api.nvim_get_current_buf() ~= buf then
+    return
+  end
+  -- Gitsigns may still be attaching when a file is first opened.
+  local status = vim.b.gitsigns_status_dict
+  if not status or status.added == nil then
+    if attempts > 0 then
+      vim.defer_fn(function()
+        focus_first_change(buf, attempts - 1)
+      end, 50)
+    end
+    return
+  end
+  require("gitsigns").nav_hunk("first", {
+    target = "all",
+    navigation_message = false,
+    foldopen = true,
+  }, function()
+    if vim.api.nvim_get_current_buf() == buf then
+      vim.cmd("normal! zz")
+    end
+  end)
+end
+
+local git_open_path
+
 local function add_file_manager_context_menu()
   vim.api.nvim_create_user_command("NeoTreeRevealInFileManager", reveal_in_file_manager, {
     desc = "Reveal the selected Neo-tree item in the system file manager",
@@ -176,6 +203,22 @@ return {
     },
 
     event_handlers = {
+      {
+        event = "file_open_requested",
+        handler = function(args)
+          git_open_path = args.state.name == "git_status" and args.path or nil
+        end,
+      },
+      {
+        event = "file_opened",
+        handler = function(path)
+          if git_open_path == path then
+            focus_first_change(vim.api.nvim_get_current_buf(), 20)
+          end
+          git_open_path = nil
+        end,
+      },
+
       -- The git watcher only sees the .git directory, so working-tree edits
       -- made outside Nvim leave the view stale until it is focused again.
       {
