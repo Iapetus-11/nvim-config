@@ -95,6 +95,9 @@ return {
       options = {
         diagnostics = "nvim_lsp",
         diagnostics_indicator = diagnostics_indicator,
+        custom_filter = function(buf)
+          return vim.api.nvim_buf_get_name(buf) ~= "" or vim.bo[buf].modified
+        end,
         left_mouse_command = in_editor_window(vim.api.nvim_set_current_buf),
         show_buffer_close_icons = false,
       },
